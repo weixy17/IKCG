@@ -1,0 +1,11 @@
+validation_steps:
+  1
+
+checkpoint_steps:
+  1
+
+dataset:
+  ACROBAT
+
+subset:
+  ""

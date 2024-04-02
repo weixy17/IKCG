@@ -1,0 +1,6 @@
+train:
+	python automatic_run.py training部分，具体运行的是main_recursive_DLFSFG_multiscale_1024_refine_for_evaluation.py
+test:
+	python automatic_run.py evaluation部分，具体运行的是main_recursive_DLFSFG_multiscale_1024_refine_for_evaluation_evaluation.py
+calculate:
+	python calculate_rtre_for_csvfile.py
