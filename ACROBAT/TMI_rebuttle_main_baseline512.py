@@ -252,12 +252,8 @@ import copy
 
 while True:
     if args.valid:
-        aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,large3,large3_std,large4,large4_std,large5,large5_std,\
-                mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
-        print("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},am75th={:.4f}({:.4f}),m75thm75th={:.4f},\
-am90th={:.4f}({:.4f}),m90thm90th={:.4f},large1={:.4f}({:.4f}),large2={:.4f}({:.4f}),large3={:.4f}({:.4f}),large4={:.4f}({:.4f}),\
-large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,\
-            large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
+        aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
+        print("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
         sys.exit(0)
     steps=steps+1
     batch = []
@@ -278,12 +274,8 @@ large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(
     # do valiation
     if steps % 100 == 0:
         if validationSize > 0:
-            aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,large3,large3_std,large4,large4_std,large5,large5_std,\
-                mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
-            string_log=("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},am75th={:.4f}({:.4f}),m75thm75th={:.4f},\
-am90th={:.4f}({:.4f}),m90thm90th={:.4f},large1={:.4f}({:.4f}),large2={:.4f}({:.4f}),large3={:.4f}({:.4f}),large4={:.4f}({:.4f}),\
-large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,\
-            large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
+            aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
+            string_log=("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
             log.log(string_log)
             if aa < minaa: 
                 minaa = aa
