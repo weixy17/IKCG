@@ -1,9 +1,9 @@
 from . import layer
 from . import MaskFlownet
-from . import pipeline_img2
+from . import pipeline
 
 def get_pipeline(network, **kwargs):
 	if network == 'MaskFlownet':
-		return pipeline_img2.PipelineFlownet(**kwargs)
+		return pipeline.PipelineFlownet(**kwargs)
 	else:
 		raise NotImplementedError

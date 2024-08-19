@@ -16,9 +16,7 @@ import numpy as np
 import mxnet as mx
 
 # data readers
-from reader.chairs import binary_reader, trainval, ppm, flo
-from reader import sintel, kitti, hd1k, things3d
-from reader.TMI_rebuttle_ACROBAT import *
+from reader.ACROBAT import *
 import cv2
 
 model_parser = argparse.ArgumentParser(add_help=False)
@@ -30,10 +28,6 @@ parser = argparse.ArgumentParser(parents=[model_parser, training_parser])
 parser.add_argument('config', type=str, nargs='?', default=None)
 parser.add_argument('--dataset_cfg', type=str, default='chairs.yaml')
 parser.add_argument('--relative', type=str, default="")
-# proportion of data to be loaded
-# for example, if shard = 4, then one fourth of data is loaded
-# ONLY for things3d dataset (as it is very large)
-parser.add_argument('-s', '--shard', type=int, default=1, help='')
 parser.add_argument('-w', '--weight', type=int, default="", help='')
 
 parser.add_argument('-g', '--gpu_device', type=str, default='0', help='Specify gpu device(s)')
@@ -47,7 +41,7 @@ parser.add_argument('-n', '--network', type=str, default='MaskFlownet') # gl, he
 parser.add_argument('--debug', action='store_true', help='Do debug')
 parser.add_argument('--valid', action='store_true', help='Do validation')
 parser.add_argument('--predict', action='store_true', help='Do prediction')
-parser.add_argument('--gkps', action='store_true', help='Do gkps')
+parser.add_argument('--gkps', action='store_true', help='Generate key point pairs')
 # inference resize for validation and prediction
 parser.add_argument('--resize', type=str, default='')
 parser.add_argument('--prep', type=str, default=None)
@@ -73,8 +67,6 @@ def mkdir(path):
 mkdir('logs')
 mkdir(os.path.join('logs', 'val'))
 mkdir(os.path.join('logs', 'debug'))
-mkdir('weights')
-mkdir('flows')
 
 # find checkpoint
 import path
@@ -90,13 +82,7 @@ if args.checkpoint is not None:
     if steps is None:
         checkpoint, steps = path.find_checkpoints(run_id)[-1]
     else:
-        checkpoint = "/ssd2/wxy/IPCG_Acrobat/association/Maskflownet_association_1024/weights_TMI_rebuttle/"+run_id+'_'+steps+'.params'#path.find_checkpoints(run_id)
-        # try:
-            # checkpoint, steps = next(filter(lambda t : t[1] == steps, checkpoints))
-        # except StopIteration:
-            # print('The steps not found in checkpoints', steps, checkpoints)
-            # sys.stdout.flush()
-            # raise StopIteration
+        checkpoint = "./weights/"+run_id+'_'+steps+'.params'
     steps = int(steps)
     if args.clear_steps:
         steps = 0
@@ -127,40 +113,13 @@ if lr_schedule is not None:
 if args.checkpoint is not None:
     print('Load Checkpoint {}'.format(checkpoint))
     sys.stdout.flush()
-    network_class = getattr(config.network, 'class').get()
-    # if train the head-stack network for the first time
-    if network_class == 'MaskFlownet_S' and args.clear_steps and dataset_cfg.dataset.value == 'chairs':
-        print('load the weight for the head network only')
-        pipe.load_head(checkpoint)
-    else:
-        print('load the weight for the network')
-        pipe.load(checkpoint)
-    if network_class == 'MaskFlownet':
-        print('fix the weight for the head network')
-        pipe.fix_head()
+    print('load the weight for the network')
+    pipe.load(checkpoint)
     sys.stdout.flush()
     if not args.valid and not args.predict:
         pipe.trainer.step(100, ignore_stale_grad=True)
-        if checkpoint.split('/')[-1]!='2afApr28-1544_475000.params':
-            pipe.trainer.load_states(checkpoint.replace('params', 'states'))
+        pipe.trainer.load_states(checkpoint.replace('params', 'states'))
 
-
-# ======== If to do prediction ========
-
-if args.predict:
-    import predict
-    checkpoint_name = os.path.basename(checkpoint).replace('.params', '')
-    predict.predict(pipe, os.path.join(repoRoot, 'flows', checkpoint_name), batch_size=args.batch, resize = infer_resize)
-    sys.exit(0)
-# if args.predict:
-#   predict()
-
-
-import pandas as pd
-
-
-validation_datasets = {}
-samples = 32 if args.debug else -1
 
 if dataset_cfg.dataset.value == 'ACROBAT':
     print('loading ACROBAT dataset...')
@@ -169,8 +128,6 @@ if dataset_cfg.dataset.value == 'ACROBAT':
     print(subset)
     sys.stdout.flush()
     dataset, train_pairs, valid_pairs = LoadACROBAT_baseline512()
-    # dataset, train_pairs, valid_pairs = LoadACROBAT_baseline512_ite1()
-    # dataset, train_pairs, valid_pairs = LoadACROBAT_baseline512_ite2()
     train_data=[[dataset[fid] for fid in record] for record in train_pairs]
     valid_data = [[dataset[fid] for fid in record] for record in valid_pairs]
     trainSize = len(train_pairs)
@@ -191,21 +148,15 @@ batch_size=args.batch
 assert batch_size % len(ctx) == 0
 batch_size_card = batch_size // len(ctx)
 
-
-
-
 sys.stdout.flush()
 
 # create log file
 if not args.valid and not args.gkps:
-    string='raw_1,reg_1,ite1_30,ite2_30'
+    string='raw_1,reg_1,ite1_30,ite2_30'############regularization parameters
     log = logger.FileLog(os.path.join(repoRoot, 'logs', 'debug' if args.debug else '', '{}_delete_kps.log'.format(run_id)))
-    log_partial = logger.FileLog(os.path.join(repoRoot, 'logs', 'debug' if args.debug else '', '{}-partial_delete_kps.log'.format(run_id)))
     log.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+string+',Load Checkpoint {}'.format(checkpoint))
-    log_partial.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+string+',Load Checkpoint {}'.format(checkpoint))
     information = ', '.join(['{}={}'.format(k, repr(args.__dict__[k])) for k in args.__dict__])
     log.log(information)
-    log_partial.log(information)
     print(string)
 
 def index_generator(n):
@@ -294,45 +245,19 @@ for i in range(2):
 
 t1 = None
 checkpoints = []
-maxkpval = float('inf')
-minmm90th=float('inf')
-minam90th=float('inf')
 minaa=float('inf')
-minma=float('inf')
 count=0
 import time
 import copy
 
 while True:
     if args.valid:
-        checkpoint_name = os.path.basename(checkpoint).replace('.params', '')
         aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,large3,large3_std,large4,large4_std,large5,large5_std,\
-            mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
+                mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
         print("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},am75th={:.4f}({:.4f}),m75thm75th={:.4f},\
 am90th={:.4f}({:.4f}),m90thm90th={:.4f},large1={:.4f}({:.4f}),large2={:.4f}({:.4f}),large3={:.4f}({:.4f}),large4={:.4f}({:.4f}),\
 large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,\
-                    large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
-        sys.exit(0)
-    if args.gkps:
-        train_pairs_nums=[int(temp[0].split('_')[0]) for temp in train_pairs]
-        train_pairs_nums_unique=np.unique(train_pairs_nums, return_index=False,axis=0)
-        count=count+1
-        for i in range (0,train_pairs_nums_unique.shape[0]):
-            print(i)
-            numname=train_pairs_nums_unique[i]
-            idxs=np.where(train_pairs_nums==numname)[0]
-            for count,idx in enumerate(idxs):
-                print(train_pairs[idx])
-                data_batch = []
-                for fid in train_pairs[idx]:
-                    data_batch.append(dataset[fid])
-                batch=[np.stack(x, axis=0) for x in zip(*[data_batch])]
-                img1, img2,img1_512, img2_512,img1_2048, img2_2048,orb1,orb2 = [batch[i] for i in range(8)]
-                if count==0:
-                    normalized_desc2s = pipe.rebuttle_kp_pairs_multiscale(args.weight,img1, img2,img1_512, img2_512,img1_2048, img2_2048,orb1,orb2,train_pairs[idx][0].split('.')[0])
-                else:
-                    normalized_desc2s = pipe.rebuttle_kp_pairs_multiscale_speed(args.weight,img1, img2,img1_512, img2_512,img1_2048, img2_2048,orb1,orb2,train_pairs[idx][0].split('.')[0],normalized_desc2s)
-            del normalized_desc2s
+            large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
         sys.exit(0)
     steps=steps+1
     batch = []
@@ -344,107 +269,31 @@ large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(
     name_nums=[]
     for i in range (batch_size):
         name_nums.append(batch_num_queue.get())
-    img1, img2, kp1, kp2, kp1_2, kp2_2= [batch[i] for i in range(6)]
-    # train_log = pipe.train_batch_baseline(args.weight,img1, img2)
-    # train_log = pipe.train_batch_S_SFG(args.weight,img1, img2, kp1, kp2,name_nums)
-    train_log = pipe.train_batch_supervised_LFS_SFG(args.weight,img1, img2, kp1, kp2, kp1_2, kp2_2)
+    img1, img2= [batch[i] for i in range(2)]
+    train_log = pipe.train_batch_baseline(args.weight,img1, img2)
     # update log
-    if  1:#steps<100 or steps % 10 == 0:
+    if  steps<100 or steps % 10 == 0:
         train_avg.update(train_log)
         log.log('steps={}{}, total_time={:.2f}'.format(steps, ''.join([', {}= {}'.format(k, v) for k, v in train_avg.average.items()]), total_time.average))
     # do valiation
-    # if steps % 100 == 0 or steps > 10000:
-    if 1:
+    if steps % 100 == 0:
         if validationSize > 0:
             aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,large3,large3_std,large4,large4_std,large5,large5_std,\
-            mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
+                mMI,sMI,mm75th,mm90th = pipe.validate_ACROBAT(valid_data)
             string_log=("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},am75th={:.4f}({:.4f}),m75thm75th={:.4f},\
 am90th={:.4f}({:.4f}),m90thm90th={:.4f},large1={:.4f}({:.4f}),large2={:.4f}({:.4f}),large3={:.4f}({:.4f}),large4={:.4f}({:.4f}),\
 large5={:.4f}({:.4f}),mMI={:.4f}({:.4f}),mm75th={:.4f},mm90th={:.4f},""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,am75th,am75th_std,m75thm75th,am90th,am90th_std,m90thm90th,large1,large1_std,large2,large2_std,\
-                    large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
+            large3,large3_std,large4,large4_std,large5,large5_std,mMI,sMI,mm75th,mm90th))
             log.log(string_log)
-            # if aa>85.9877 and ma>57.4920 and m75tha>107.9389 and m90tha>187.9111 and am>63.6482 and mm>42.8760 and am75th>98.1717 and m75thm75th>119.1516\
-                # and am90th>164.9835 and m90thm90th>331.9462 and large1>67.7743 and large2>35.8246 and large3>26.8769 and large4>17.2332 and large5>12.4234\
-                # and mMI<0.6907 and mm75th>66.3808 and mm90th>104.8832:
-            # if aa<92.6357 and m75tha<105.5501 and am75th<107.3238 and m75thm75th<115.6293:
-            if aa<86.9422:# and m75tha<99.9448 and am75th<101.8731 and m75thm75th<100.3280:
-            # if aa<94.5825 and m75tha<118.7786 and am75th<108.6032 and m75thm75th<126.8720:
-            # if aa<100 and aa>84.5252 and ma>59.4126 and m75tha>97.4847 and m90tha>182.0818 and am>60.8624 and mm>41.5020 and am75th>98.7613 and m75thm75th>115.3990\
-                # and am90th>158.0087 and m90thm90th>369.1805 and large1>151.7147 and large2>177.8506 and large3>197.4440 and large4>232.2027 and large5>433.5936\
-                # and mMI<0.6948 and mm75th>62.0120 and mm90th>101.9147:
-                prefix = os.path.join(repoRoot, 'weights_TMI_rebuttle', '{}_{}'.format(run_id, steps))
+            if aa < minaa: 
+                minaa = aa
+                prefix = os.path.join(repoRoot, './weights', '{}_{}'.format(run_id, steps))
                 pipe.save(prefix)
-                print(string_log)
-                log_partial.log(string_log)
                 checkpoints.append(prefix)
-                while len(checkpoints) > 500:
+                #########remove the older checkpoints
+                while len(checkpoints) > 5:
                     prefix = checkpoints[0]
                     checkpoints = checkpoints[1:]
-                    remove_queue.put(prefix + '.params')
                     remove_queue.put(prefix + '.states')
-            # if aa < minaa: # gl, keep the best model for test dataset.
-                # minaa = aa
-                # if ma<minma:
-                    # minma = ma
-                # if mm90th<minmm90th:
-                    # minmm90th = mm90th
-                # if am90th<minam90th:
-                    # minam90th = am90th
-                # prefix = os.path.join(repoRoot, 'weights_TMI_rebuttle', '{}_{}'.format(run_id, steps))
-                # pipe.save(prefix)
-                # print(string_log)
-                # log_partial.log(string_log)
-                # checkpoints.append(prefix)
-                # #########remove the older checkpoints
-                # while len(checkpoints) > 20:
-                    # prefix = checkpoints[0]
-                    # checkpoints = checkpoints[1:]
-                    # remove_queue.put(prefix + '.params')
-                    # remove_queue.put(prefix + '.states')
-            # elif ma<minma:
-                # minma = ma
-                # if mm90th<minmm90th:
-                    # minmm90th = mm90th
-                # if am90th<minam90th:
-                    # minam90th = am90th
-                # prefix = os.path.join(repoRoot, 'weights_TMI_rebuttle', '{}_{}'.format(run_id, steps))
-                # pipe.save(prefix)
-                # print(string_log)
-                # log_partial.log(string_log)
-                # checkpoints.append(prefix)
-                # #########remove the older checkpoints
-                # while len(checkpoints) > 20:
-                    # prefix = checkpoints[0]
-                    # checkpoints = checkpoints[1:]
-                    # remove_queue.put(prefix + '.params')
-                    # remove_queue.put(prefix + '.states')
-            # elif mm90th<minmm90th:
-                # minmm90th = mm90th
-                # if am90th<minam90th:
-                    # minam90th = am90th
-                # prefix = os.path.join(repoRoot, 'weights_TMI_rebuttle', '{}_{}'.format(run_id, steps))
-                # pipe.save(prefix)
-                # print(string_log)
-                # log_partial.log(string_log)
-                # checkpoints.append(prefix)
-                # #########remove the older checkpoints
-                # while len(checkpoints) > 20:
-                    # prefix = checkpoints[0]
-                    # checkpoints = checkpoints[1:]
-                    # remove_queue.put(prefix + '.params')
-                    # remove_queue.put(prefix + '.states')
-            # elif am90th<minam90th:
-                # minam90th = am90th
-                # prefix = os.path.join(repoRoot, 'weights_TMI_rebuttle', '{}_{}'.format(run_id, steps))
-                # pipe.save(prefix)
-                # print(string_log)
-                # log_partial.log(string_log)
-                # checkpoints.append(prefix)
-                # #########remove the older checkpoints
-                # while len(checkpoints) > 20:
-                    # prefix = checkpoints[0]
-                    # checkpoints = checkpoints[1:]
-                    # remove_queue.put(prefix + '.params')
-                    # remove_queue.put(prefix + '.states')
-            
+                    remove_queue.put(prefix + '.params')
             

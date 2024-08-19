@@ -25,11 +25,8 @@ def find_log(prefix):
 		raise ValueError("Not found {}".format(prefix))
 
 def find_checkpoints(run_id):
-	# weights_dir = os.path.join(repo_root, 'weights_gelin_final')
 	weights_dir = os.path.join(repo_root, 'weights')
-	# weights_dir = os.path.join(repo_root, 'weights_TMI_rebuttle')
 	pattern = r'^{}.*_(\d+)\.params$'.format(run_id)#\d+   946Dec09 724 044Nov29 3206   807Dec22 53 
-	# pattern = r'^{}.*_(104)\.params$'.format(run_id)#\d+   946Dec09 724 044Nov29 3206   807Dec22 53 
 	checkpoints = list(sorted(list_dir(weights_dir, pattern, groups=True), key=lambda x : int(x[1])))
 	return checkpoints
 
