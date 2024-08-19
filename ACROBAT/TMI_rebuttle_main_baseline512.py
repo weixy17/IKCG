@@ -10,17 +10,8 @@ import socket
 import random
 import scipy.io as scio
 from skimage import io
-# ======== PLEASE MODIFY ========
-# where is the repo
 repoRoot = r'.'
-# to CUDA\vX.Y\bin
-# os.environ['PATH'] = r'path\to\your\NVIDIA GPU Computing Toolkit\CUDA\v9.0\bin' + ';' + os.environ['PATH']
-
 os.environ["MXNET_CUDNN_AUTOTUNE_DEFAULT"] = "1"
-# Flying Chairs Dataset
-# chairs_path = r'F:\linge\data2\FlyingChairs\FlyingChairs_release\data'
-# chairs_split_file = r'F:\linge\data2\FlyingChairs\FlyingChairs_release\FlyingChairs_train_val.txt'
-
 import numpy as np
 import mxnet as mx
 
