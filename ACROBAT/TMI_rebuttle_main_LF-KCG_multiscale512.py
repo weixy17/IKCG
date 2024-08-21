@@ -154,12 +154,10 @@ sys.stdout.flush()
 
 # create log file
 if not args.valid and not args.gkps:
-    string='raw_1,reg_1,vgg16_30,kps2_30'############regularization parameters
     log = logger.FileLog(os.path.join(repoRoot, 'logs', 'debug' if args.debug else '', '{}.log'.format(run_id)))
-    log.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+string+',Load Checkpoint {}'.format(checkpoint))
+    log.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+',Load Checkpoint {}'.format(checkpoint))
     information = ', '.join(['{}={}'.format(k, repr(args.__dict__[k])) for k in args.__dict__])
     log.log(information)
-    print(string)
 
 def index_generator(n):
     indices = np.arange(0, n, dtype=np.int)
@@ -246,17 +244,11 @@ for i in range(2):
     start_daemon(Thread(target=batch_samples, args=(data_queue, batch_queue, batch_size)))
 
 t1 = None
-checkpoints = []
-minaa=float('inf')
 count=0
 import time
 import copy
 
 while True:
-    if args.valid:
-        aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
-        print("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
-        sys.exit(0)
     if args.gkps:
         train_pairs_nums=[int(temp[0].split('_')[0]) for temp in train_pairs]
         train_pairs_nums_unique=np.unique(train_pairs_nums, return_index=False,axis=0)
@@ -294,21 +286,3 @@ while True:
     if  steps<100 or steps % 10 == 0:
         train_avg.update(train_log)
         log.log('steps={}{}, total_time={:.2f}'.format(steps, ''.join([', {}= {}'.format(k, v) for k, v in train_avg.average.items()]), total_time.average))
-    # do valiation
-    if steps % 100 == 0:
-        if validationSize > 0:
-            aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
-            string_log=("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
-            log.log(string_log)
-            if aa < minaa: 
-                minaa = aa
-                prefix = os.path.join(repoRoot, './weights', '{}_{}'.format(run_id, steps))
-                pipe.save(prefix)
-                checkpoints.append(prefix)
-                #########remove the older checkpoints
-                while len(checkpoints) > 5:
-                    prefix = checkpoints[0]
-                    checkpoints = checkpoints[1:]
-                    remove_queue.put(prefix + '.states')
-                    remove_queue.put(prefix + '.params')
-            

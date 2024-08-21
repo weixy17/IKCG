@@ -71,10 +71,6 @@ def LoadACROBAT_baseline512():
             dataset[filename2] = img2
             train_pairs.append((filename1, filename2))
             train_pairs.append((filename2, filename1))
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -102,24 +98,11 @@ def LoadACROBAT_baseline512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
                 
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -172,13 +155,9 @@ def LoadACROBAT_F_KCG_multiscale512():
                 lmk2 = np.array(lmk2)
                 lmk2 = lmk2[:, [2, 1]]
                 lmk2 = np.pad(lmk2,((0, 1200 -len(lmk2)), (0, 0)), "constant")###############vgg with vgg large
-            dataset[lmkname1] = lmk1/2
-            dataset[lmkname2] = lmk2/2
+            dataset[lmkname1] = lmk1
+            dataset[lmkname2] = lmk2
             train_pairs.append((filename1, filename2,lmkname1,lmkname2))
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -189,8 +168,6 @@ def LoadACROBAT_F_KCG_multiscale512():
             filename2=num+'_HE_val.jpg'
             lmkname1=filename1.split('.')[0]+'.xlsx'
             lmkname2=filename2.split('.')[0]+'.xlsx'
-            lmkname1_training=filename1.split('.')[0]+'_training.xlsx'
-            lmkname2_training=filename2.split('.')[0]+'_training.xlsx'
             img1 = io.imread(os.path.join(validimgpath, filename1), as_gray=True)
             img1 = np.concatenate((np.expand_dims(img1,0),np.expand_dims(img1,0),np.expand_dims(img1,0)),0)
             if img1.max()<2:
@@ -206,25 +183,10 @@ def LoadACROBAT_F_KCG_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
-                
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
-                
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -238,7 +200,7 @@ def LoadACROBAT_L_KCG_kps_multiscale512():
     dataset = {}
     train_pairs = []
     valid_pairs = []
-    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to1024/"
+    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to512/"
     trainimgpath="./data/train_after_affine_4096_to1024/"
     trainimgpath512="./data/train_after_affine_4096_to512/"
     trainimgpath2048="./data/train_after_affine_4096_to2048/"
@@ -312,7 +274,7 @@ def LoadACROBAT_L_KCG_kps_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk1_orb**2).sum(1),1)+np.expand_dims((lmk_obtained1**2).sum(1),0)-2*np.dot(lmk1_orb,lmk_obtained1.transpose((1,0))))
             lmk_orb_valid1=lmk1_orb[np.where(dis_temp.min(1)>5)[0],:]
             lmk_orb_valid1, returned_index=np.unique(lmk_orb_valid1, return_index=True,axis=0)
-            dataset[flmk_orb1] = lmk_orb_valid1
+            dataset[flmk_orb1] = lmk_orb_valid1*2
             
             lmk_obtained2=lmk2
             lmk2_orb = np.array(pd.read_csv(orbpath+flmk_orb2))
@@ -320,13 +282,9 @@ def LoadACROBAT_L_KCG_kps_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk2_orb**2).sum(1),1)+np.expand_dims((lmk_obtained2**2).sum(1),0)-2*np.dot(lmk2_orb,lmk_obtained2.transpose((1,0))))
             lmk_orb_valid2=lmk2_orb[np.where(dis_temp.min(1)>5)[0],:]
             lmk_orb_valid2, returned_index=np.unique(lmk_orb_valid2, return_index=True,axis=0)
-            dataset[flmk_orb2] = lmk_orb_valid2
+            dataset[flmk_orb2] = lmk_orb_valid2*2
             train_pairs.append((filename1, filename2,filename1_512,filename2_512,filename1_2048, filename2_2048,flmk_orb1,flmk_orb2))
 
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -352,24 +310,10 @@ def LoadACROBAT_L_KCG_kps_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
-                
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -423,13 +367,9 @@ def LoadACROBAT_L_KCG_multiscale512():
                 lmk2 = np.array(lmk2)
                 lmk2 = lmk2[:, [2, 1]]
                 lmk2 = np.pad(lmk2,((0, 1200 -len(lmk2)), (0, 0)), "constant")###############vgg with vgg large
-            dataset[lmkname1] = lmk1/2
-            dataset[lmkname2] = lmk2/2
+            dataset[lmkname1] = lmk1
+            dataset[lmkname2] = lmk2
             train_pairs.append((filename1, filename2,lmkname1,lmkname2))
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -440,8 +380,6 @@ def LoadACROBAT_L_KCG_multiscale512():
             filename2=num+'_HE_val.jpg'
             lmkname1=filename1.split('.')[0]+'.xlsx'
             lmkname2=filename2.split('.')[0]+'.xlsx'
-            lmkname1_training=filename1.split('.')[0]+'_training.xlsx'
-            lmkname2_training=filename2.split('.')[0]+'_training.xlsx'
             img1 = io.imread(os.path.join(validimgpath, filename1), as_gray=True)
             img1 = np.concatenate((np.expand_dims(img1,0),np.expand_dims(img1,0),np.expand_dims(img1,0)),0)
             if img1.max()<2:
@@ -457,24 +395,10 @@ def LoadACROBAT_L_KCG_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
-                
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
                 
             except:
                 valid_pairs.append((filename1, filename2,None,None))
@@ -546,15 +470,11 @@ def LoadACROBAT_LF_KCG_multiscale512():
                 lmk2_2 = np.array(lmk2_2)
                 lmk2_2 = lmk2_2[:, [2, 1]]
                 lmk2_2 = np.pad(lmk2_2,((0, 1200 -len(lmk2_2)), (0, 0)), "constant")###############vgg with vgg large
-            dataset[lmkname1] = lmk1/2
-            dataset[lmkname2] = lmk2/2
-            dataset[lmkname1_2] = lmk1_2/2
-            dataset[lmkname2_2] = lmk2_2/2
+            dataset[lmkname1] = lmk1
+            dataset[lmkname2] = lmk2
+            dataset[lmkname1_2] = lmk1_2
+            dataset[lmkname2_2] = lmk2_2
             train_pairs.append((filename1, filename2,lmkname1,lmkname2,lmkname1_2,lmkname2_2))
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -565,8 +485,6 @@ def LoadACROBAT_LF_KCG_multiscale512():
             filename2=num+'_HE_val.jpg'
             lmkname1=filename1.split('.')[0]+'.xlsx'
             lmkname2=filename2.split('.')[0]+'.xlsx'
-            lmkname1_training=filename1.split('.')[0]+'_training.xlsx'
-            lmkname2_training=filename2.split('.')[0]+'_training.xlsx'
             img1 = io.imread(os.path.join(validimgpath, filename1), as_gray=True)
             img1 = np.concatenate((np.expand_dims(img1,0),np.expand_dims(img1,0),np.expand_dims(img1,0)),0)
             if img1.max()<2:
@@ -582,24 +500,11 @@ def LoadACROBAT_LF_KCG_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
                 
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -612,7 +517,7 @@ def LoadACROBAT_KCG_kps_ite1_multiscale512():
     dataset = {}
     train_pairs = []
     valid_pairs = []
-    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to1024/"
+    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to512/"
     trainimgpath="./data/train_after_affine_4096_to1024/"
     trainimgpath512="./data/train_after_affine_4096_to512/"
     trainimgpath2048="./data/train_after_affine_4096_to2048/"
@@ -701,7 +606,7 @@ def LoadACROBAT_KCG_kps_ite1_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk1_orb**2).sum(1),1)+np.expand_dims((lmk_obtained1**2).sum(1),0)-2*np.dot(lmk1_orb,lmk_obtained1.transpose((1,0))))
             lmk_orb_valid1=lmk1_orb[np.where(dis_temp.min(1)>2)[0],:]
             lmk_orb_valid1, returned_index=np.unique(lmk_orb_valid1, return_index=True,axis=0)
-            dataset[flmk_orb1] = lmk_orb_valid1
+            dataset[flmk_orb1] = lmk_orb_valid1*2
             
             lmk_obtained2=np.concatenate((np.unique(lmk2, return_index=False,axis=0), np.unique(lmk2_2, return_index=False,axis=0)), 0)
             lmk2_orb = np.array(pd.read_csv(orbpath+flmk_orb2))
@@ -709,13 +614,9 @@ def LoadACROBAT_KCG_kps_ite1_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk2_orb**2).sum(1),1)+np.expand_dims((lmk_obtained2**2).sum(1),0)-2*np.dot(lmk2_orb,lmk_obtained2.transpose((1,0))))
             lmk_orb_valid2=lmk2_orb[np.where(dis_temp.min(1)>2)[0],:]
             lmk_orb_valid2, returned_index=np.unique(lmk_orb_valid2, return_index=True,axis=0)
-            dataset[flmk_orb2] = lmk_orb_valid2
+            dataset[flmk_orb2] = lmk_orb_valid2*2
             train_pairs.append((filename1, filename2,filename1_512,filename2_512,filename1_2048, filename2_2048,flmk_orb1,flmk_orb2))
 
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -741,24 +642,10 @@ def LoadACROBAT_KCG_kps_ite1_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
-                
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -842,17 +729,13 @@ def LoadACROBAT_IKCG_1ite_multiscale512():
                 lmk2_3 = np.array(lmk2_3)
                 lmk2_3 = lmk2_3[:, [2, 1]]
                 lmk2_3 = np.pad(lmk2_3,((0, 1200 -len(lmk2_3)), (0, 0)), "constant")###############vgg with vgg large
-            dataset[lmkname1] = lmk1/2
-            dataset[lmkname2] = lmk2/2
-            dataset[lmkname1_2] = lmk1_2/2
-            dataset[lmkname2_2] = lmk2_2/2
-            dataset[lmkname1_3] = lmk1_3/2
-            dataset[lmkname2_3] = lmk2_3/2
+            dataset[lmkname1] = lmk1
+            dataset[lmkname2] = lmk2
+            dataset[lmkname1_2] = lmk1_2
+            dataset[lmkname2_2] = lmk2_2
+            dataset[lmkname1_3] = lmk1_3
+            dataset[lmkname2_3] = lmk2_3
             train_pairs.append((filename1, filename2,lmkname1,lmkname2,lmkname1_2,lmkname2_2,lmkname1_3,lmkname2_3))
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -863,8 +746,6 @@ def LoadACROBAT_IKCG_1ite_multiscale512():
             filename2=num+'_HE_val.jpg'
             lmkname1=filename1.split('.')[0]+'.xlsx'
             lmkname2=filename2.split('.')[0]+'.xlsx'
-            lmkname1_training=filename1.split('.')[0]+'_training.xlsx'
-            lmkname2_training=filename2.split('.')[0]+'_training.xlsx'
             img1 = io.imread(os.path.join(validimgpath, filename1), as_gray=True)
             img1 = np.concatenate((np.expand_dims(img1,0),np.expand_dims(img1,0),np.expand_dims(img1,0)),0)
             if img1.max()<2:
@@ -880,24 +761,10 @@ def LoadACROBAT_IKCG_1ite_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
-                
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)
@@ -910,7 +777,7 @@ def LoadACROBAT_KCG_kps_ite2_multiscale512():
     dataset = {}
     train_pairs = []
     valid_pairs = []
-    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to1024/"
+    orbpath="IKCG/ACROBAT/Generate_kps_pairs_based_on_fixed_deep_features/kps_ORB64s4_4096_to512/"
     trainimgpath="./data/train_after_affine_4096_to1024/"
     trainimgpath512="./data/train_after_affine_4096_to512/"
     trainimgpath2048="./data/train_after_affine_4096_to2048/"
@@ -1013,7 +880,7 @@ def LoadACROBAT_KCG_kps_ite2_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk1_orb**2).sum(1),1)+np.expand_dims((lmk_obtained1**2).sum(1),0)-2*np.dot(lmk1_orb,lmk_obtained1.transpose((1,0))))
             lmk_orb_valid1=lmk1_orb[np.where(dis_temp.min(1)>2)[0],:]
             lmk_orb_valid1, returned_index=np.unique(lmk_orb_valid1, return_index=True,axis=0)
-            dataset[flmk_orb1] = lmk_orb_valid1
+            dataset[flmk_orb1] = lmk_orb_valid1*2
             
             lmk_obtained2=np.concatenate((np.unique(lmk2, return_index=False,axis=0), np.unique(lmk2_2, return_index=False,axis=0), np.unique(lmk2_3, return_index=False,axis=0)), 0)
             lmk2_orb = np.array(pd.read_csv(orbpath+flmk_orb2))
@@ -1021,14 +888,10 @@ def LoadACROBAT_KCG_kps_ite2_multiscale512():
             dis_temp=np.sqrt(np.expand_dims((lmk2_orb**2).sum(1),1)+np.expand_dims((lmk_obtained2**2).sum(1),0)-2*np.dot(lmk2_orb,lmk_obtained2.transpose((1,0))))
             lmk_orb_valid2=lmk2_orb[np.where(dis_temp.min(1)>2)[0],:]
             lmk_orb_valid2, returned_index=np.unique(lmk_orb_valid2, return_index=True,axis=0)
-            dataset[flmk_orb2] = lmk_orb_valid2
+            dataset[flmk_orb2] = lmk_orb_valid2*2
             # pdb.set_trace()
             train_pairs.append((filename1, filename2,filename1_512,filename2_512,filename1_2048, filename2_2048,flmk_orb1,flmk_orb2))
 
-    csvpath="IKCG/Predicted_mask_for_val.xlsx"
-    csvpath2="IKCG/ACROBAT_validation_annotated_kps.csv"
-    csvdata =np.array(pd.read_excel(csvpath,header=None,index_col=None))
-    csvdata2 =np.array(pd.read_excel(csvpath2,header=None,index_col=None))
     for validfilename in validfilenames:
         stain_type=validfilename.split('_')[1]
         if stain_type=='HE':
@@ -1054,24 +917,11 @@ def LoadACROBAT_KCG_kps_ite2_multiscale512():
                 lmk1=lmk1[1:,1:].astype('float')
                 lmk1 = lmk1[:, [1, 0]]
                 lmk1 = np.pad(lmk1, ((0, 200 - len(lmk1)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],7][0]*np.ones([200,1])
-                if isinstance(csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0],(int,float)):
-                    rotation=csvdata2[np.where(csvdata2[:,1]==int(num))[0],13][0]*np.ones([200,1])
-                else:
-                    rotation=1000*np.ones([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename1)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk1=np.concatenate((lmk1,resolution,crop_para,rotation,pad_para),1)
                 
                 lmk2 =np.array(pd.read_excel(os.path.join(validimgpath, lmkname2),header=None,index_col=None))
                 lmk2=lmk2[1:,1:].astype('float')
                 lmk2 = lmk2[:, [1, 0]]
                 lmk2 = np.pad(lmk2, ((0, 200 - len(lmk2)), (0, 0)), "constant")
-                resolution=csvdata2[np.where(csvdata2[:,1]==int(num))[0],8][0]*np.ones([200,1])
-                rotation=np.zeros([200,1])
-                crop_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],1:5],((0,200-1),(0,0)),'edge')
-                pad_para=np.pad(csvdata[np.where(csvdata[:,0]==filename2)[0],6:10],((0,200-1),(0,0)),'edge')
-                lmk2=np.concatenate((lmk2,resolution,crop_para,rotation,pad_para),1)
             except:
                 valid_pairs.append((filename1, filename2,None,None))
                 print(lmkname1)

@@ -30,7 +30,7 @@ from torchsummary import summary
 select_num=4
 search_range=64
 step_range=32
-orb = cv2.ORB_create(select_num, scaleFactor=1.5,nlevels=3,edgeThreshold=2,patchSize=4)#,patchSize=16)
+orb = cv2.ORB_create(select_num, scaleFactor=1.5,nlevels=3,edgeThreshold=2,patchSize=4)
 image_size=1024
 publicpath='ORB_select_32_32patch_scaleFactor1.5_nlevels3_patchsize2_steprange16_selectnum2_1024'
 savepath='./kps_ORB64s4_4096_to1024_images/'

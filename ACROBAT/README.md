@@ -60,10 +60,3 @@ The following script is for training:
 | 6 | IKCG   | ACROBAT training dataset  | ACROBAT validation dataset  | `python TMI_rebuttle_main_IKCG_multiscale_512.py MaskFlownet_S.yaml --dataset_cfg ACROBAT.yaml -g 0 -c 2afApr28-1544 --clear_steps --weight 1000 --batch 1` |
 
 </center>
-
-## Pretrained Models
-
-Pretrained models for IKCG on ACROBAT dataset are given (see `./weights/`).
-
-## Inferring
-

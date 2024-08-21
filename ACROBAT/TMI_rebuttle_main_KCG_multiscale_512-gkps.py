@@ -152,12 +152,10 @@ sys.stdout.flush()
 
 # create log file
 if not args.valid and not args.gkps:
-    string='rawSIFT_1,reg_1,vgg16_30,LFS_30,ite1_30'############regularization parameters
     log = logger.FileLog(os.path.join(repoRoot, 'logs', 'debug' if args.debug else '', '{}.log'.format(run_id)))
-    log.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+string+',Load Checkpoint {}'.format(checkpoint))
+    log.log('start={}, train={}, val={}, host={}, batch={},'.format(steps, trainSize, validationSize, socket.gethostname(), batch_size)+',Load Checkpoint {}'.format(checkpoint))
     information = ', '.join(['{}={}'.format(k, repr(args.__dict__[k])) for k in args.__dict__])
     log.log(information)
-    print(string)
 
 def index_generator(n):
     indices = np.arange(0, n, dtype=np.int)
@@ -244,17 +242,11 @@ for i in range(2):
     start_daemon(Thread(target=batch_samples, args=(data_queue, batch_queue, batch_size)))
 
 t1 = None
-checkpoints = []
-minaa=float('inf')
 count=0
 import time
 import copy
 siftdir="./SIFT_features/train_4096_to512/"
 while True:
-    if args.valid:
-        aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
-        print("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
-        sys.exit(0)
     if args.gkps:
         train_pairs_nums=[int(temp[0].split('_')[0]) for temp in train_pairs]
         train_pairs_nums_unique=np.unique(train_pairs_nums, return_index=False,axis=0)
@@ -276,46 +268,3 @@ while True:
                     normalized_desc2s = pipe.rebuttle_kp_pairs_multiscale_speed(args.weight,img1, img2,img1_512, img2_512,img1_2048, img2_2048,orb1,orb2,train_pairs[idx][0].split('.')[0],normalized_desc2s)
             del normalized_desc2s
         sys.exit(0)
-    steps=steps+1
-    batch=[]
-    sift1 = np.zeros((batch_size, 384, 512,512))
-    sift2 = np.zeros((batch_size, 384, 512,512))
-    for i in range(batch_size):
-        name_num = next(train_gen)
-        need_to_put=[]
-        for count,fid in enumerate(train_pairs[name_num]):
-            need_to_put.append(dataset[fid])
-        batch.append(need_to_put)
-        img1name=train_pairs[name_num][0]
-        img2name=train_pairs[name_num][1]
-        sift1path=os.path.join(siftdir,img1name.split('.')[0]+'.mat')
-        sift2path=os.path.join(siftdir,img2name.split('.')[0]+'.mat')
-        siftdata1 = scio.loadmat(sift1path)["sift"].astype(float)
-        siftdata2 = scio.loadmat(sift2path)["sift"].astype(float)
-        sift1[i, :, :, :] = np.transpose(siftdata1, (2, 0, 1))
-        sift2[i, :, :, :] = np.transpose(siftdata2, (2, 0, 1))
-    batch=[np.stack(x, axis=0) for x in zip(*batch)]
-    img1, img2,kp1,kp2,kp1_2,kp2_2 = [batch[i] for i in range(len(train_pairs[name_num]))]
-    train_log = pipe.train_batch_KCG(args.weight,img1, img2,sift1,sift2,kp1,kp2,kp1_2,kp2_2)
-    # update log
-    if  steps<100 or steps % 10 == 0:
-        train_avg.update(train_log)
-        log.log('steps={}{}, total_time={:.2f}'.format(steps, ''.join([', {}= {}'.format(k, v) for k, v in train_avg.average.items()]), total_time.average))
-    # do valiation
-    if steps % 100 == 0:
-        if validationSize > 0:
-            aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI = pipe.validate_ACROBAT(valid_data)
-            string_log=("""steps= {} aa={:.4f}({:.4f}),ma={:.4f}, m75tha={:.4f}, m90tha={:.4f}, am={:.4f}({:.4f}),mm={:.4f},mMI={:.4f}({:.4f}),""".format(steps,aa,aa_std,ma,m75tha,m90tha,am,am_std,mm,mMI,sMI))
-            log.log(string_log)
-            if aa < minaa: 
-                minaa = aa
-                prefix = os.path.join(repoRoot, './weights', '{}_{}'.format(run_id, steps))
-                pipe.save(prefix)
-                checkpoints.append(prefix)
-                #########remove the older checkpoints
-                while len(checkpoints) > 5:
-                    prefix = checkpoints[0]
-                    checkpoints = checkpoints[1:]
-                    remove_queue.put(prefix + '.states')
-                    remove_queue.put(prefix + '.params')
-            

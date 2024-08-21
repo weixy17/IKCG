@@ -33,7 +33,7 @@ from torchsummary import summary
 import torchvision.transforms as transforms
 
 img_size=1024
-orbpath="./kps_ORB64s4_4096_to1024/"
+orbpath="./kps_ORB64s4_4096_to512/"
 csvfilepath='./kps_vgg16/'
 precessed_files=os.listdir(csvfilepath)
 savepath='./kps_vgg16_images/'
@@ -76,7 +76,7 @@ def LoadACROBAT():
         if im2_2048.max()<=1:
             im2_2048=np.uint8(im2_2048*255)
         lmk2_orb = pd.read_csv(orbpath+file.split('_')[0]+'_HE_train.csv')
-        lmk2_orb = np.array(lmk2_orb)
+        lmk2_orb = np.array(lmk2_orb)*2
         lmk2_orb = int32(lmk2_orb[:, [2, 1]]).reshape(-1,2)
         
         
@@ -102,7 +102,7 @@ def LoadACROBAT():
             if im1_2048.max()<=1:
                 im1_2048=np.uint8(im1_2048*255)
             lmk1_orb = pd.read_csv(orbpath+file1[0:-4]+'.csv')
-            lmk1_orb = np.array(lmk1_orb)
+            lmk1_orb = np.array(lmk1_orb)*2
             lmk1_orb = int32(lmk1_orb[:, [2, 1]]).reshape(-1,2)
             if valid_count==0:
                 desc2,kp2 = train(np.expand_dims(im1,axis=0),np.expand_dims(im1_512,axis=0),np.expand_dims(im1_2048,axis=0), np.expand_dims(im2,axis=0),np.expand_dims(im2_512,axis=0),np.expand_dims(im2_2048,axis=0),lmk1_orb,lmk2_orb,file1.split('.')[0])

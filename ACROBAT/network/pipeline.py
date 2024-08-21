@@ -19,9 +19,7 @@ from .MI import *
 import cv2
 import time
 import scipy.io as scio
-select_num=8
-search_range=16
-step_range=8
+
 def build_network(name):
     return eval(name)
 
@@ -31,8 +29,6 @@ def get_coords(img):
     range_y = nd.arange(shape[3], ctx = img.context).reshape(shape = (1, 1, 1, -1)).tile(reps = (shape[0], 1, shape[2], 1))
     return nd.concat(range_x, range_y, dim = 1)
 
-orb = cv2.ORB_create(800, scaleFactor=1.5)
-orb_2 = cv2.ORB_create(select_num, scaleFactor=1.5,nlevels=3,edgeThreshold=2,patchSize=2)#,patchSize=16)
 arange6=30*2
 arange5=25*2
 arange4=20*2
@@ -330,7 +326,22 @@ class PipelineFlownet:
         , "dist loss2": np.mean(np.concatenate([loss.asnumpy() for loss in dist_losses2])), "dist loss3": np.mean(np.concatenate([loss.asnumpy() for loss in dist_losses3]))}
     
     
-    
+    def landmark_dist(self, lmk1, lmk2, flows):
+        lmk1=lmk1[:,:,0:2]
+        lmk2=lmk2[:,:,0:2]
+        if np.shape(lmk2)[0] > 0:
+            shape = nd.array(flows[0].shape[2: 4], ctx=flows[0].context)#[512,512]
+            lmk_mask = (1 - nd.prod(lmk1 == 0, axis=-1))*(1 - nd.prod(lmk2 == 0, axis=-1)) > 0.5#####添加掩膜，去除lmk中的0值
+            for flow in flows:
+                batch_lmk = lmk1 / (nd.reshape(shape, (1, 1, 2)) - 1) * 2 - 1#坐标归一化到[-1,1]
+                batch_lmk = batch_lmk.transpose((0, 2, 1)).expand_dims(axis=3)
+                warped_lmk = lmk1 + nd.BilinearSampler(flow, batch_lmk.flip(axis=1)).squeeze(axis=-1).transpose((0, 2, 1))#batch_lmk.flip(axis=1)是把行列坐标变为x,y坐标
+            lmk_dist = nd.mean(nd.sqrt(nd.sum(nd.square(warped_lmk - lmk2), axis=-1) * lmk_mask + 1e-5), axis=-1)#mean rtre######问题在于点的数目取mean
+            lmk_dist = lmk_dist/(np.sum(lmk_mask, axis=1)+1e-5)*(np.shape(lmk2)[1]) # 消除当kp数目为0的时候的影响,考虑到batch可能大于1
+            lmk_dist = lmk_dist*(np.sum(lmk_mask, axis=1)!=0) # 消除当kp数目为0的时候的影响
+            return lmk_dist / (shape[0]*1.414), warped_lmk, lmk2
+        else:
+            return 0, [], []
     
     
     def rebuttle_kp_pairs_multiscale(self, dist_weight, img1, img2,img1_256, img2_256,img1_1024, img2_1024,orb1s,orb2s,name_num):
@@ -761,65 +772,3 @@ class PipelineFlownet:
         # if none of these cases they are equal, no filling needed.
 
         return np.concatenate((im1, im2), axis=1)
-
-
-    def landmark_dist_for_4_indicators_original_ACROBAT(self, lmk1s, lmk2s, flows):
-        lmk1=lmk1s[:,:,0:2]
-        lmk2=lmk2s[:,:,0:2]
-        shape = nd.array(flows[0].shape[2: 4], ctx=flows[0].context)#[512,512]
-        lmk_mask = ((1 - nd.prod(lmk1 <= 0, axis=-1)) > 0.5)*((1 - nd.prod(lmk2 <= 0, axis=-1)) > 0.5)
-        for flow in flows:
-            batch_lmk = lmk1 / (nd.reshape(shape, (1, 1, 2)) - 1) * 2 - 1#坐标归一化到[-1,1]
-            batch_lmk = batch_lmk.transpose((0, 2, 1)).expand_dims(axis=3)
-            warped_lmk0 = lmk1+ nd.BilinearSampler(flow, batch_lmk.flip(axis=1)).squeeze(axis=-1).transpose((0, 2, 1))#batch_lmk.flip(axis=1)是把行列坐标变为x,y坐标
-        lmk_dist0 = nd.sqrt(nd.sum(nd.square(warped_lmk0 - lmk2), axis=-1) * lmk_mask)
-        warped_lmk=copy.deepcopy(warped_lmk0)
-        warped_lmk[:,:,0]=(warped_lmk[:,:,0]/(shape[0]-1)*(lmk2s[:,:,4]-lmk2s[:,:,3]+lmk2s[:,:,11]+lmk2s[:,:,10])+lmk2s[:,:,3]-1-lmk2s[:,:,10])*lmk2s[:,:,2]
-        warped_lmk[:,:,1]=(warped_lmk[:,:,1]/(shape[0]-1)*(lmk2s[:,:,6]-lmk2s[:,:,5]+lmk2s[:,:,9]+lmk2s[:,:,8])+lmk2s[:,:,5]-1-lmk2s[:,:,8])*lmk2s[:,:,2]
-        lmk2[:,:,0]=(lmk2[:,:,0]/(shape[0]-1)*(lmk2s[:,:,4]-lmk2s[:,:,3]+lmk2s[:,:,11]+lmk2s[:,:,10])+lmk2s[:,:,3]-1-lmk2s[:,:,10])*lmk2s[:,:,2]
-        lmk2[:,:,1]=(lmk2[:,:,1]/(shape[0]-1)*(lmk2s[:,:,6]-lmk2s[:,:,5]+lmk2s[:,:,9]+lmk2s[:,:,8])+lmk2s[:,:,5]-1-lmk2s[:,:,8])*lmk2s[:,:,2]
-        lmk_dist = nd.sqrt(nd.sum(nd.square(warped_lmk - lmk2), axis=-1) * lmk_mask)
-        lmk_dist_valid=lmk_dist[0,nd.topk(lmk_mask, axis=1, k=int(lmk_mask.sum().asnumpy()[0]), ret_typ='indices').squeeze()]
-        lmk_dist_valid_sorted=nd.topk(lmk_dist_valid, axis=0, k=int(lmk_mask.sum().asnumpy()[0]), ret_typ='value',is_ascend=1)##########从小到大排列
-        if int(lmk_mask.sum().asnumpy()[0])%2==0:
-            lmk_dist_median=(lmk_dist_valid_sorted[int(lmk_mask.sum().asnumpy()[0]/2)]+lmk_dist_valid_sorted[int(lmk_mask.sum().asnumpy()[0]/2)-1])/2
-        else:
-            lmk_dist_median=lmk_dist_valid_sorted[int((lmk_mask.sum().asnumpy()[0]-1)/2)]
-        lmk_dist_mean=lmk_dist_valid.mean()
-        return lmk_dist_mean, lmk_dist_median
-
-    def validate_ACROBAT(self, data):
-        results = []
-        raws=[]
-        evas = []
-        evas_mask = []
-        size = len(data)
-        bs = len(self.ctx)
-        output_cnt = 0
-        dist_loss_means=[]
-        dist_loss_medians=[]
-        MIs=[]
-        matrix = []
-        for j in range(0, size, bs):
-            batch_data = data[j: j + bs]
-            ctx = self.ctx[ : min(len(batch_data), len(self.ctx))]
-            nd_data = [gluon.utils.split_and_load([record[i] for record in batch_data], ctx, even_split = False) for i in range(len(batch_data[0]))]
-            for img1, img2, lmk1, lmk2 in zip(*nd_data):
-                img1, img2 = img1 / 255.0, img2 / 255.0
-                img1, img2, rgb_mean = self.centralize(img1, img2)
-                pred, _,_,_ = self.network(img1, img2)
-                shape = img1.shape
-                flow = self.upsampler(pred[-1])
-                if shape[2] != flow.shape[2] or shape[3] != flow.shape[3]:
-                    flow = nd.contrib.BilinearResize2D(flow, height=shape[2], width=shape[3]) * nd.array([shape[d] / flow.shape[d] for d in (2, 3)], ctx=flow.context).reshape((1, 2, 1, 1))
-                flows = []
-                flows.append(flow)
-                warp = self.reconstruction(img2, flow)
-                dist_loss_mean, dist_loss_median = self.landmark_dist_for_4_indicators_original_ACROBAT(lmk1, lmk2, flows)
-                dist_loss_means.append(dist_loss_mean.asnumpy())
-                dist_loss_medians.append(dist_loss_median.asnumpy())
-                MI=MILoss_wxy(img1[0,0,:,:].asnumpy(),warp[0,0,:,:].asnumpy())
-                MIs.append(MI)
-        return np.mean(dist_loss_means),np.std(dist_loss_means),np.median(dist_loss_means),np.percentile(dist_loss_means,75),np.percentile(dist_loss_means,90)\
-               ,np.mean(dist_loss_medians),np.std(dist_loss_medians),np.median(dist_loss_medians),np.mean(MIs),np.std(MIs)
-
