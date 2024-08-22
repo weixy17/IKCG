@@ -15,7 +15,6 @@ import string
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from .MI import *
 import cv2
 import time
 import scipy.io as scio

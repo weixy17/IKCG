@@ -1,3 +1,2 @@
-[2022/01/05 16:24:05] start=0, train=400, val=251, host=amax, batch=2[2022/01/12 01:45:16] start=475000, train=4, val=251, host=amax, batch=2
+[2022/01/12 01:45:16] start=475000, train=400, val=251, host=amax, batch=2
 [2022/01/12 01:45:16] batch=2, config='MaskFlownet_S.yaml', dataset_cfg='ANHIR.yaml', relative='UM', shard=1, weight=1000, gpu_device='0', checkpoint='2afApr28', clear_steps=False, network='MaskFlownet', debug=False, valid=True, predict=False, resize='', prep='1024'
-[2022/01/12 01:45:39] steps= 475000 am= 3.8519678115844727 aa= 7.2468366622924805 mm= 3.8519678115844727 ma= 7.991814136505127
