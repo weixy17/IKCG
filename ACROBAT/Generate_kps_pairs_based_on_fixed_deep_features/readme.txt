@@ -1,0 +1,1 @@
+Codes refer to G. Kang, Y. Wei, Y. Yang, Y. Zhuang, and A. Hauptmann, "Pixel-level cycle association: A new perspective for domain adaptive semantic segmentation," Adv Neural Inf Process Syst, vol. 33, pp. 3569-3580, 2020.
