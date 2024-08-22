@@ -2,8 +2,6 @@
 
 By Xingyue Wei, Lin Ge, Lijie Huang, Jianwen Luo, and Yan Xu.
 
-[[arXiv]](https://arxiv.org/pdf/2003.10955.pdf) [[ResearchGate]](https://www.researchgate.net/publication/340115724)
-
 ```
 @inproceedings{Wei2024IKCG,
   author = Wei, Xingyue and Ge, Lin and Huang, Lijie and Luo, Jianwen and Xu, Yan},
