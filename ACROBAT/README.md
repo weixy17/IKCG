@@ -31,7 +31,7 @@ We use ANHIR and ACROBAT datasets:
 - [ACROBAT](https://acrobat.grand-challenge.org/)
 
 ## Pipeline
-- 1. To generate keypoints based on ORB and match keypoint pairs based on fixed deep features, please go to IKCG\ACROBAT\Generate_kps_pairs_based_on_fixed_deep_features and run step1_ORB_generate_keypoints.py and step2_match_keypoint_pairs_multiscale.py
+- 1. After you generate keypoints based on ORB, you can match keypoint pairs based on fixed deep features, please go to IKCG\ACROBAT\Generate_kps_pairs_based_on_fixed_deep_features and run match_keypoint_pairs_multiscale.py
 - 2. With keypoint pairs matched based on fixed deep feature, you can train F-KCG
 - 3. With converged F-KCG, you can match new keypoint pairs based on learnable deep features. The command line is:
    `python TMI_rebuttle_main_L-KCG_multiscale512-gkps.py MaskFlownet_S.yaml --dataset_cfg ACROBAT.yaml -g 1 -c 2afApr28-1544 --clear_steps --weight 1000 --batch 1 --gkps` 
