@@ -57,6 +57,7 @@ The following script is for training:
 | 5 | KCG | ACROBAT training dataset | ACROBAT validation dataset  | `python TMI_rebuttle_main_KCG_multiscale_512.py MaskFlownet_S.yaml --dataset_cfg ACROBAT.yaml -g 1 -c 2afApr28-1544 --clear_steps --weight 1000 --batch 1`|
 | 6 | IKCG   | ACROBAT training dataset  | ACROBAT validation dataset  | `python TMI_rebuttle_main_IKCG_multiscale_512.py MaskFlownet_S.yaml --dataset_cfg ACROBAT.yaml -g 0 -c 2afApr28-1544 --clear_steps --weight 1000 --batch 1` |
 
-## Pretrained IKCG models for the image size of 1024*1024 are provided.
+## Pretrained models
+Pretrained IKCG models for the image size of 1024*1024 are provided.
 
 </center>
