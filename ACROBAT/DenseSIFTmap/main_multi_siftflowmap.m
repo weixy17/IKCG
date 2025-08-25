@@ -1,43 +1,36 @@
-clear all
+clear;
 close all
 clc
-pairflag=importdata('D:\journal\for_submit\matrix_sequence_manual_validation.csv');
-for image_num=0:480
-    if ~isempty(strfind(pairflag{image_num+2},'training'))
-        for mapsize = [32 128]
-            im10=imread(['D:\journal\re_do_from_ori\s3_affine_result_obtain\zoom\512after_affine\', num2str(image_num),'_1.jpg']);
-            im20=imread(['D:\journal\re_do_from_ori\s3_affine_result_obtain\zoom\512after_affine\', num2str(image_num),'_2.jpg']);
-           
-            if mapsize == 128
-                im1 = imfilter(im10,fspecial('gaussian',7,0.5),'same','replicate');
-                im2 = imfilter(im20,fspecial('gaussian',7,0.5),'same','replicate');
-            end
-            if mapsize == 32
-                im1 = imfilter(im10,fspecial('gaussian',11,0.5),'same','replicate');
-                im2 = imfilter(im20,fspecial('gaussian',11,0.5),'same','replicate');
-            end
-            
-            im1=imresize(im1, mapsize/512, 'bicubic');
-            im2=imresize(im2, mapsize/512, 'bicubic');
+datapath='ACROBAT_images_path';#######image size:1024*1024
+files=dir(datapath);
+for i=3:size(files,1)
+    filename=files(i).name;
+    im1=imread(fullfile(datapath,filename));
+    im1=imfilter(im1,fspecial('gaussian',7,1.),'same','replicate');
+    cellsize=3;
+    gridspacing=1;
+    
+    im=im2double(im1);
+    sift = mexDenseSIFT(im,cellsize,gridspacing);
+    save(['savepath\',filename(1:end-4),'.mat'],'sift') ;
+    %%%%%%%%resize to 512*512
+    im1_2=imresize(im1,1/2,'bicubic');
+    %%%%%%%%resize to different scale
+    im1_2=im2double(im1_2);
+    sift = mexDenseSIFT(im1_2,cellsize,gridspacing);
+    save(['savepath_512\',filename(1:end-4),'.mat'],'sift') ;
 
-            im1=im2double(im1);
-            im2=im2double(im2);
-
-            %figure;imshow(im1);figure;imshow(im2);
-
-            cellsize=3;
-            gridspacing=1;
-
-            addpath(fullfile(pwd,'mexDenseSIFT'));
-            addpath(fullfile(pwd,'mexDiscreteFlow'));
-
-            sift1new = mexDenseSIFT(im1,cellsize,gridspacing);
-            sift2new = mexDenseSIFT(im2,cellsize,gridspacing);
-            sift1new = permute(sift1new,[3,1,2]);
-            sift2new = permute(sift2new,[3,1,2]);
-            save(['.\siftflowmap_',num2str(mapsize),'\',num2str(image_num),'sift1.mat'],'sift1new') 
-            save(['.\siftflowmap_',num2str(mapsize),'\',num2str(image_num),'sift2.mat'],'sift2new') 
-
-        end
-    end
+    %%%%%%%%resize to 256*256
+    im1_4=imresize(im1,1/4,'bicubic');
+    %%%%%%%%resize to different scale
+    im1_4=im2double(im1_4);
+    sift = mexDenseSIFT(im1_4,cellsize,gridspacing);
+    save(['savepath_256\',filename(1:end-4),'.mat'],'sift') ;
 end
+
+
+
+
+
+
+
