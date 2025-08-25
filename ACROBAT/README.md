@@ -42,6 +42,9 @@ We use ANHIR and ACROBAT datasets:
 - 7. Then you can train IKCG for the first iteration.
 - 8. By iteratively perform 6 and 7, you can get IKCG at different iterations.
 
+To generate dense SIFT features, go to ./DenseSIFTmap
+
+
 ## Training
 
 The following script is for training:
