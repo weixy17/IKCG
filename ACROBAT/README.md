@@ -30,7 +30,7 @@ We use ANHIR and ACROBAT datasets:
 - [ANHIR](https://anhir.grand-challenge.org/)
 - [ACROBAT](https://acrobat.grand-challenge.org/)
 
-We also public the manual annotations on the ACROBAT validation dataset, which are used for evalation in our paper.
+We also public the manual annotations on the ACROBAT validation dataset (please refer to ACROBAT_validation_annotated_kps.csv), which are used for evalation in our paper.
 
 ## Pipeline
 - 1. To generate keypoints based on ORB and match keypoint pairs based on fixed deep features, please go to IKCG\ACROBAT\Generate_kps_pairs_based_on_fixed_deep_features and run step1_ORB_generate_keypoints.py and step2_match_keypoint_pairs_multiscale.py
